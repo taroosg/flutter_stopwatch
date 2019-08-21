@@ -37,9 +37,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Timer _timer;
   int _startTime;
   List _bell = [0, 0, 0];
-  int _bell1 = 0;
-  int _bell2 = 0;
-  int _bell3 = 0;
   List initialtimer = [new Duration(), new Duration(), new Duration()];
   // Duration initialtimer = new Duration();
 
@@ -62,6 +59,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _incrementCounter() {
+    // この辺なんとかする
+    if (((_bell[0] != 0 && _bell[1] != 0) && _bell[0] - _bell[1] >= 0) ||
+        ((_bell[0] != 0 && _bell[2] != 0) && _bell[0] - _bell[2] >= 0) ||
+        ((_bell[1] != 0 && _bell[2] != 0) && _bell[1] - _bell[2] >= 0)) {
+      alert();
+      return;
+    }
     if (_isRunning) {
       _timer?.cancel();
       setState(() {
