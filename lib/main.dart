@@ -32,21 +32,28 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   int _totalCounter = 0;
   bool _isRunning = false;
-  List _buttonLabel = ['Start!', 'Stop!'];
-  String _runButtonLabel = 'Start!';
+  List _buttonLabel = ['Start', 'Stop'];
+  String _runButtonLabel = 'Start';
+  Map _alertMessage = {
+    'title': 'Unhappy letter',
+    'alert': 'Invalid value.',
+    'text1': 'Time soon.',
+    'text2': "It's time.",
+    'text3': "You died.",
+  };
   Timer _timer;
   int _startTime;
   List _bell = [0, 0, 0];
   List initialtimer = [new Duration(), new Duration(), new Duration()];
-  // Duration initialtimer = new Duration();
 
-  void alert() {
+  // アラートを出す関数
+  void alert(String title, String text) {
     showDialog(
       context: context,
       builder: (context) {
         return CupertinoAlertDialog(
-          title: Text('Unhappy letter'),
-          content: Text('Time up'),
+          title: Text(title),
+          content: Text(text),
           actions: <Widget>[
             CupertinoDialogAction(
               child: Text('OK'),
@@ -58,15 +65,18 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  // 時間を管理する関数
   void _incrementCounter() {
     // この辺なんとかする
     if (((_bell[0] != 0 && _bell[1] != 0) && _bell[0] - _bell[1] >= 0) ||
         ((_bell[0] != 0 && _bell[2] != 0) && _bell[0] - _bell[2] >= 0) ||
         ((_bell[1] != 0 && _bell[2] != 0) && _bell[1] - _bell[2] >= 0)) {
-      alert();
+      alert(_alertMessage['title'], _alertMessage['alert']);
       return;
     }
+
     if (_isRunning) {
+      // 実行→停止
       _timer?.cancel();
       setState(() {
         _runButtonLabel = _buttonLabel[0];
@@ -74,7 +84,9 @@ class _MyHomePageState extends State<MyHomePage> {
         _isRunning = false;
       });
     } else {
+      // 停止→実行
       setState(() {
+        _isRunning = true;
         _runButtonLabel = _buttonLabel[1];
       });
       _startTime = new DateTime.now().millisecondsSinceEpoch;
@@ -83,14 +95,17 @@ class _MyHomePageState extends State<MyHomePage> {
           (Timer timer) => setState(() {
                 int _nowTime = new DateTime.now().millisecondsSinceEpoch;
                 _counter = _nowTime - _startTime + _totalCounter;
-                if (_counter ~/ 1000 == _bell[0] ~/ 1000) alert();
-                if (_counter ~/ 1000 == _bell[1] ~/ 1000) alert();
-                if (_counter ~/ 1000 == _bell[2] ~/ 1000) alert();
-                _isRunning = true;
+                if (_counter ~/ 1000 == _bell[0] ~/ 1000)
+                  alert(_alertMessage['title'], _alertMessage['text1']);
+                if (_counter ~/ 1000 == _bell[1] ~/ 1000)
+                  alert(_alertMessage['title'], _alertMessage['text2']);
+                if (_counter ~/ 1000 == _bell[2] ~/ 1000)
+                  alert(_alertMessage['title'], _alertMessage['text3']);
               }));
     }
   }
 
+  // リセットする関数
   void _resetCounter() {
     if (_isRunning) return;
     _timer?.cancel();
@@ -100,12 +115,14 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  // ミリ秒をいい感じに整形する関数
   String milliseconds2time(int ms) {
     return '${new DateTime.fromMillisecondsSinceEpoch(ms).toUtc()}'
         .substring(10, 19);
   }
 
-  @override
+  // 時間設定するwidget
+  // @override
   Widget _inputDurationButton(String icon, int bellNum) {
     return MaterialButton(
       child: Row(
@@ -133,12 +150,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      // child: Text(
-      //   "$icon ${milliseconds2time(_bell[bellNum])}",
-      //   style: TextStyle(
-      //     fontSize: 24,
-      //   ),
-      // ),
       onPressed: () {
         showModalBottomSheet(
             context: context,
@@ -155,7 +166,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       _bell[bellNum] = changedtimer.inMilliseconds;
                       initialtimer[bellNum] = changedtimer;
                     });
-                    print(_bell[bellNum]);
+                    // print(_bell[bellNum]);
                   },
                 ),
               );
@@ -164,25 +175,49 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  // スタート，ストップ，リセットボタンのwidget
+  Widget _operationButton(String label, onPressedFunction) {
+    return MaterialButton(
+      color: Color(0xffc85554),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(
+          color: Colors.white,
+        ),
+      ),
+      minWidth: MediaQuery.of(context).copyWith().size.width / 2,
+      height: MediaQuery.of(context).copyWith().size.height / 10,
+      onPressed: onPressedFunction,
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 24.0,
+        ),
+      ),
+    );
+  }
+
+  // 画面全体の制御
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(
+          widget.title,
+          style: TextStyle(
+            fontSize: 24.0,
+          ),
+        ),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            // Text(
-            //   '$_counter',
-            // ),
             Text(
               '${milliseconds2time(_counter)}',
-              // style: Theme.of(context).textTheme.display1,
               style: TextStyle(
                 color: Colors.grey[700],
-                fontSize: 36,
+                fontSize: MediaQuery.of(context).copyWith().size.width / 10,
               ),
             ),
             Column(
@@ -196,14 +231,8 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
-                  RaisedButton(
-                    onPressed: _resetCounter,
-                    child: Text('Reset!'),
-                  ),
-                  RaisedButton(
-                    onPressed: _incrementCounter,
-                    child: Text('$_runButtonLabel'),
-                  ),
+                  _operationButton('Reset', _resetCounter),
+                  _operationButton('$_runButtonLabel', _incrementCounter),
                 ],
               ),
             ),
