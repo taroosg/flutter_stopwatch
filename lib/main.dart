@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'dart:async';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:audioplayers/audio_cache.dart';
 
 void main() => runApp(MyApp());
 
@@ -32,6 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   int _totalCounter = 0;
   bool _isRunning = false;
+  bool _isMario = false;
   List _buttonLabel = ['Start', 'Stop'];
   String _runButtonLabel = 'Start';
   Map _alertMessage = {
@@ -45,6 +48,8 @@ class _MyHomePageState extends State<MyHomePage> {
   int _startTime;
   List _bell = [0, 0, 0];
   List initialtimer = [new Duration(), new Duration(), new Duration()];
+
+  AudioCache player = AudioCache();
 
   // アラートを出す関数
   void alert(String title, String text) {
@@ -95,12 +100,48 @@ class _MyHomePageState extends State<MyHomePage> {
           (Timer timer) => setState(() {
                 int _nowTime = new DateTime.now().millisecondsSinceEpoch;
                 _counter = _nowTime - _startTime + _totalCounter;
-                if (_counter ~/ 1000 == _bell[0] ~/ 1000)
-                  alert(_alertMessage['title'], _alertMessage['text1']);
-                if (_counter ~/ 1000 == _bell[1] ~/ 1000)
-                  alert(_alertMessage['title'], _alertMessage['text2']);
-                if (_counter ~/ 1000 == _bell[2] ~/ 1000)
-                  alert(_alertMessage['title'], _alertMessage['text3']);
+                if (_counter ~/ 1000 == _bell[0] ~/ 1000) {
+                  // alert(_alertMessage['title'], _alertMessage['text1']);
+                  if (_isMario) {
+                    player.play('timeup.mp3');
+                  } else {
+                    player.play('bell_1.mp3');
+                  }
+                }
+                if (_counter ~/ 1000 == _bell[1] ~/ 1000) {
+                  // alert(_alertMessage['title'], _alertMessage['text2']);
+                  player.play('bell_1.mp3');
+                  int count = 0;
+                  Timer bell2;
+                  bell2 = Timer.periodic(Duration(milliseconds: 500),
+                      (Timer timer) {
+                    if (count > 0) {
+                      bell2.cancel();
+                    } else {
+                      player.play('bell_1.mp3');
+                      count++;
+                    }
+                  });
+                }
+                if (_counter ~/ 1000 == _bell[2] ~/ 1000) {
+                  // alert(_alertMessage['title'], _alertMessage['text3']);
+                  if (_isMario) {
+                    player.play('castleclear.mp3');
+                  } else {
+                    player.play('bell_1.mp3');
+                    int count = 0;
+                    Timer bell2;
+                    bell2 = Timer.periodic(Duration(milliseconds: 500),
+                        (Timer timer) {
+                      if (count > 1) {
+                        bell2.cancel();
+                      } else {
+                        player.play('bell_1.mp3');
+                        count++;
+                      }
+                    });
+                  }
+                }
               }));
     }
   }
@@ -208,6 +249,16 @@ class _MyHomePageState extends State<MyHomePage> {
             fontSize: 24.0,
           ),
         ),
+        actions: <Widget>[
+          CupertinoSwitch(
+              activeColor: Color(0xff3e62ad),
+              value: _isMario,
+              onChanged: (bool value) {
+                setState(() {
+                  _isMario = value;
+                });
+              }),
+        ],
       ),
       body: Center(
         child: Column(
